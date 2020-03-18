@@ -9,14 +9,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class main {
-final static String HandbrakeDir = "C:" + File.separator + "Program Files" + File.separator + "HandBrake"+File.separator+"HandBrakeCLI.exe";
-
+final static String HandbrakeDir = "HandBrakeCLI.exe";
+final static String convertedTxt = "converted.txt";
     public static void main(String[] args){
         //get list of files
         List<Path> filelist;
         Queue<File> fileQueue = new LinkedList<>();
-        ArrayList<String> filetxt = readFile(new File("converted.txt"));
+        ArrayList<String> filetxt = readFile(new File(convertedTxt));
         try {
+            //walk the file tree finding all video files
             filelist = Files.walk(Paths.get("Y:\\Shows\\Arrow"))
                     .filter(Files::isRegularFile)
                     .collect(Collectors.toList());
@@ -29,6 +30,7 @@ final static String HandbrakeDir = "C:" + File.separator + "Program Files" + Fil
                         break;
                     }
                     else{
+                        //add found video to conversion queue
                         System.out.println("Unconverted File Found");
                         fileQueue.add(path.toFile());
                     }
@@ -37,12 +39,12 @@ final static String HandbrakeDir = "C:" + File.separator + "Program Files" + Fil
             for(File file : fileQueue){
                 //create exec command
                 String outputFile = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-3) + "mp4";
-                String execCommand ="\"" +  HandbrakeDir + "\" -i \"" + file.getAbsolutePath() + "\" -o \"" + outputFile + "\" -f av_mp4 --optimize -e nvenc_h264 -q 22 -B 160 --all-audio --maxHeight 1080 --maxWidth 1920";
+                String execCommand ="\"" +  HandbrakeDir + "\" -i \"" + file.getAbsolutePath() + "\" -o \"" + outputFile + "\" -f av_mp4 --inline-parameter-sets --markers --optimize -e nvenc_h265 --vfr --all-subtitles --encoder-level auto -q 22 -B 160 --arate auto --aencoder copy --all-audio --maxHeight 1080 --maxWidth 1920 --keep-display-aspect  --encoder-preset slow ";
                 System.out.println("Exec: "+ execCommand);
                 //Process p = Runtime.getRuntime().exec(execCommand);
                 ProcessBuilder pb = new ProcessBuilder();
                 pb.command(execCommand.split(" "));
-                System.out.println(pb.command());
+                //System.out.println(pb.command());
                 pb.inheritIO();
                 Process p = pb.start();
 
@@ -50,10 +52,9 @@ final static String HandbrakeDir = "C:" + File.separator + "Program Files" + Fil
                     filetxt.add(outputFile);
                     System.out.println("Deleting File: " + file.getAbsolutePath());
                     file.delete();
+                    writeFile(filetxt);
                 }
             }
-            writeFile(filetxt);
-
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -79,7 +80,7 @@ final static String HandbrakeDir = "C:" + File.separator + "Program Files" + Fil
     private static void writeFile(ArrayList<String> arrayList){
         PrintWriter out = null;
         try {
-            out = new PrintWriter(new File("converted.txt"));
+            out = new PrintWriter(new File(convertedTxt));
             for (String string : arrayList){
                 out.println(string);
             }
