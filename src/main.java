@@ -24,35 +24,60 @@ final static String convertedTxt = "converted.txt";
 
             for (Path path : filelist){
                 if(path.toFile().exists()){
-                    System.out.println("Checking: " + path.toFile().getAbsolutePath());
+                    System.out.print("Checking: " + path.toFile().getAbsolutePath());
                     //check against txt
-                    if (filetxt.contains(path.toFile().getAbsolutePath())){
+                    boolean fileWasConverted = false;
+
+                    for (String file : filetxt){
+                        String filePath = path.toFile().getAbsolutePath().trim();
+                        System.out.println("Comparing " + filePath + " to " + file);
+                        if (file.trim().contains(filePath)){
+                            fileWasConverted = true;
+                            break;
+                        }
+                    }
+                    if (fileWasConverted){
+                        System.out.println(" || Converted File Found");
                         break;
                     }
                     else{
                         //add found video to conversion queue
-                        System.out.println("Unconverted File Found");
+                        System.out.println(" || Unconverted File Found");
                         fileQueue.add(path.toFile());
                     }
                 }
             }
             for(File file : fileQueue){
+                String newpath = file.getPath().replace(file.getName(), "old_" + file.getName());
+                File newfile =  new File(newpath);
+
+                if (file.renameTo(newfile)) {
+                    System.out.println("File renamed successfully to : " +  newpath);
+                }
+                else {
+                    System.out.println("Unable to rename file");
+                    break;
+                }
+
                 //create exec command
                 String outputFile = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-3) + "mp4";
-                String execCommand ="\"" +  HandbrakeDir + "\" -i \"" + file.getAbsolutePath() + "\" -o \"" + outputFile + "\" -f av_mp4 --inline-parameter-sets --markers --optimize -e nvenc_h265 --vfr --all-subtitles --encoder-level auto -q 22 -B 160 --arate auto --aencoder copy --all-audio --maxHeight 1080 --maxWidth 1920 --keep-display-aspect  --encoder-preset slow ";
+                String execCommand ="\"" +  HandbrakeDir + "\" -i \"" + newfile.getAbsolutePath() + "\" -o \"" + outputFile + "\" -f av_mp4 --inline-parameter-sets --markers --optimize -e nvenc_h265 --vfr --all-subtitles --encoder-level auto -q 22 -B 160 --arate auto --aencoder copy --all-audio --maxHeight 1080 --maxWidth 1920 --keep-display-aspect  --encoder-preset slow ";
                 System.out.println("Exec: "+ execCommand);
                 //Process p = Runtime.getRuntime().exec(execCommand);
                 ProcessBuilder pb = new ProcessBuilder();
                 pb.command(execCommand.split(" "));
-                //System.out.println(pb.command());
+                System.out.println(pb.command());
                 pb.inheritIO();
                 Process p = pb.start();
 
                 if (p.waitFor() == 0){
-                    filetxt.add(outputFile);
+                    filetxt.add(outputFile.replace("\n"," "));
                     System.out.println("Deleting File: " + file.getAbsolutePath());
-                    file.delete();
+                    newfile.delete();
                     writeFile(filetxt);
+                }
+                else{
+                    newfile.renameTo(file);
                 }
             }
         } catch (IOException e) {
@@ -68,7 +93,7 @@ final static String convertedTxt = "converted.txt";
             try {
                 Scanner scanner = new Scanner(file);
                 while (scanner.hasNext()){
-                    arrayList.add(scanner.next());
+                    arrayList.add(scanner.nextLine());
                 }
                 scanner.close();
             } catch (FileNotFoundException e) {
@@ -78,6 +103,7 @@ final static String convertedTxt = "converted.txt";
         return arrayList;
     }
     private static void writeFile(ArrayList<String> arrayList){
+        System.out.println("Updating TXT File");
         PrintWriter out = null;
         try {
             out = new PrintWriter(new File(convertedTxt));
