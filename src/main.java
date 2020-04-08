@@ -74,7 +74,7 @@ final static String convertedTxt = "converted.txt";
                 //create exec command
                 String outputFile = originalFile.getAbsolutePath().substring(0,originalFile.getAbsolutePath().length()-3) + "mp4";
                 outputFile = outputFile.replaceAll("2160","1080").replaceAll("BlueRay","").replaceAll("blueray","");
-                String execCommand ="\"" +  HandbrakeDir + "\" --input \"" + newFile.getAbsolutePath() + "\" --output \"" + outputFile + "\" --format av_mp4 --inline-parameter-sets --markers --optimize --encoder nvenc_h265 --vfr --all-subtitles --encoder-level auto --vb 3500 --ab 320 --arate auto --all-audio --mixdown stereo --maxHeight 1080 --maxWidth 1920 --keep-display-aspect  --encoder-preset slow ";
+                String execCommand ="\"" +  HandbrakeDir + "\" --input \"" + newFile.getAbsolutePath() + "\" --output \"" + outputFile + "\" --format av_mp4 --inline-parameter-sets --markers --optimize --encoder nvenc_h265 --encoder-preset slow --vfr --all-subtitles --encoder-level auto --vb 3500 --ab 320 --arate auto --all-audio --aencoder copy:ac3,copy:dts --audio-fallback ac3 --mixdown stereo --maxHeight 1080 --maxWidth 1920 --keep-display-aspect";
                 System.out.println("Exec: "+ execCommand);
                 ProcessBuilder pb = new ProcessBuilder();
                 pb.command(execCommand.split(" ")); // makes the execCommand compatible with processBuilder

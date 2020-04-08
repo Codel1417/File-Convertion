@@ -5,3 +5,7 @@ converted.txt
 out/production/File Convertion/main.class
 *.iml
 *.exe
+/RUN
+/File Convertion.iml
+/converted.txt
+/out/
