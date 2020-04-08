@@ -38,12 +38,13 @@ final static String convertedTxt = "converted.txt";
             filelist.addAll(Files.walk(Paths.get("Y:\\Shows"))
                     .filter(Files::isRegularFile)
                     .collect(Collectors.toList()));
+            System.out.println("Search Completed");
+
             for (Path path : filelist){
                 if(path.toFile().exists()){
                     System.out.println("Checking: " + path.toFile().getAbsolutePath());
-                    //check against txt
+                    //check against txt file to blacklist converted videos
                     boolean fileWasConverted = false;
-
                     for (String file : filetxt){
                         String filePath = path.toFile().getAbsolutePath().trim();
                         //System.out.println("Comparing " + filePath + " to " + file);
@@ -53,15 +54,17 @@ final static String convertedTxt = "converted.txt";
                     }
                     if (!fileWasConverted){
                         //add found video to conversion queue
-                        fileQueue.add(path.toFile());                    }
+                        fileQueue.add(path.toFile());
+                    }
                 }
             }
-            for(File file : fileQueue){
-                String newpath = file.getPath().replace(file.getName(), "old_" + file.getName());
-                File newfile =  new File(newpath);
+            for(File originalFile : fileQueue){
+                //This is to prevent the output video from overwriting the original if the file extension is the same.
+                String newPath = originalFile.getPath().replace(originalFile.getName(), "old_" + originalFile.getName());
+                File newFile =  new File(newPath);
 
-                if (file.renameTo(newfile)) {
-                    System.out.println("File renamed successfully to : " +  newpath);
+                if (originalFile.renameTo(newFile)) {
+                    System.out.println("File renamed successfully to : " +  newPath);
                 }
                 else {
                     System.out.println("Unable to rename file");
@@ -69,24 +72,23 @@ final static String convertedTxt = "converted.txt";
                 }
 
                 //create exec command
-                String outputFile = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-3) + "mp4";
+                String outputFile = originalFile.getAbsolutePath().substring(0,originalFile.getAbsolutePath().length()-3) + "mp4";
                 outputFile = outputFile.replaceAll("2160","1080").replaceAll("BlueRay","").replaceAll("blueray","");
-                String execCommand ="\"" +  HandbrakeDir + "\" --input \"" + newfile.getAbsolutePath() + "\" --output \"" + outputFile + "\" --format av_mp4 --inline-parameter-sets --markers --optimize --encoder nvenc_h265 --vfr --all-subtitles --encoder-level auto --vb 3500 --ab 320 --arate auto --all-audio --mixdown stereo --maxHeight 1080 --maxWidth 1920 --keep-display-aspect  --encoder-preset slow ";
+                String execCommand ="\"" +  HandbrakeDir + "\" --input \"" + newFile.getAbsolutePath() + "\" --output \"" + outputFile + "\" --format av_mp4 --inline-parameter-sets --markers --optimize --encoder nvenc_h265 --vfr --all-subtitles --encoder-level auto --vb 3500 --ab 320 --arate auto --all-audio --mixdown stereo --maxHeight 1080 --maxWidth 1920 --keep-display-aspect  --encoder-preset slow ";
                 System.out.println("Exec: "+ execCommand);
                 ProcessBuilder pb = new ProcessBuilder();
-                pb.command(execCommand.split(" "));
-                System.out.println(pb.command());
-                pb.inheritIO();
+                pb.command(execCommand.split(" ")); // makes the execCommand compatible with processBuilder
+                pb.inheritIO(); //connects handbrake io to console window
                 Process p = pb.start();
 
                 if (p.waitFor() == 0){
                     filetxt.add(outputFile.replace("\n"," "));
-                    System.out.println("Deleting File: " + file.getAbsolutePath());
-                    newfile.delete();
+                    System.out.println("Deleting File: " + originalFile.getAbsolutePath());
+                    newFile.delete();
                     writeFile(filetxt);
                 }
                 else{
-                    newfile.renameTo(file);
+                    newFile.renameTo(originalFile);
                 }
                 //Check if Run file removed, stop program if missing
                 File file1 = new File("RUN");
