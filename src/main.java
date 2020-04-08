@@ -16,15 +16,31 @@ final static String convertedTxt = "converted.txt";
         List<Path> filelist;
         Queue<File> fileQueue = new LinkedList<>();
         ArrayList<String> filetxt = readFile(new File(convertedTxt));
+
+        //Create file to stop program early
+        PrintWriter out;
+        try {
+            out = new PrintWriter(new File("RUN"));
+            out.flush();
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+
+        System.out.println("Starting Search");
         try {
             //walk the file tree finding all video files
             filelist = Files.walk(Paths.get("Y:\\Movies"))
                     .filter(Files::isRegularFile)
                     .collect(Collectors.toList());
-
+            filelist.addAll(Files.walk(Paths.get("Y:\\Shows"))
+                    .filter(Files::isRegularFile)
+                    .collect(Collectors.toList()));
             for (Path path : filelist){
                 if(path.toFile().exists()){
-                    System.out.print("Checking: " + path.toFile().getAbsolutePath());
+                    System.out.println("Checking: " + path.toFile().getAbsolutePath());
                     //check against txt
                     boolean fileWasConverted = false;
 
@@ -33,18 +49,11 @@ final static String convertedTxt = "converted.txt";
                         //System.out.println("Comparing " + filePath + " to " + file);
                         if (file.trim().contains(filePath)){
                             fileWasConverted = true;
-                            break;
                         }
                     }
-                    if (fileWasConverted){
-                        //System.out.println(" || Converted File Found");
-                        break;
-                    }
-                    else{
+                    if (!fileWasConverted){
                         //add found video to conversion queue
-                        //System.out.println(" || Unconverted File Found");
-                        fileQueue.add(path.toFile());
-                    }
+                        fileQueue.add(path.toFile());                    }
                 }
             }
             for(File file : fileQueue){
@@ -61,10 +70,9 @@ final static String convertedTxt = "converted.txt";
 
                 //create exec command
                 String outputFile = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-3) + "mp4";
-                outputFile = outputFile.replaceAll("2160","1080");
-                String execCommand ="\"" +  HandbrakeDir + "\" -i \"" + newfile.getAbsolutePath() + "\" -o \"" + outputFile + "\" -f av_mp4 --inline-parameter-sets --markers --optimize -e nvenc_h265 --vfr --all-subtitles --encoder-level auto -q 22 -B 160 --arate auto --aencoder copy --all-audio --maxHeight 1080 --maxWidth 1920 --keep-display-aspect  --encoder-preset slow ";
+                outputFile = outputFile.replaceAll("2160","1080").replaceAll("BlueRay","").replaceAll("blueray","");
+                String execCommand ="\"" +  HandbrakeDir + "\" --input \"" + newfile.getAbsolutePath() + "\" --output \"" + outputFile + "\" --format av_mp4 --inline-parameter-sets --markers --optimize --encoder nvenc_h265 --vfr --all-subtitles --encoder-level auto --vb 3500 --ab 320 --arate auto --all-audio --mixdown stereo --maxHeight 1080 --maxWidth 1920 --keep-display-aspect  --encoder-preset slow ";
                 System.out.println("Exec: "+ execCommand);
-                //Process p = Runtime.getRuntime().exec(execCommand);
                 ProcessBuilder pb = new ProcessBuilder();
                 pb.command(execCommand.split(" "));
                 System.out.println(pb.command());
@@ -79,6 +87,12 @@ final static String convertedTxt = "converted.txt";
                 }
                 else{
                     newfile.renameTo(file);
+                }
+                //Check if Run file removed, stop program if missing
+                File file1 = new File("RUN");
+                if (!file1.exists()){
+                    System.out.println("Stopping");
+                    System.exit(0);
                 }
             }
         } catch (IOException | InterruptedException e) {
