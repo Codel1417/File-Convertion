@@ -8,15 +8,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/*
-TODO: Split list dynamically
-TODO:  2 Threads of handbrake
-TODO: Make thread safe. Synchronised?
-TODO: Move process execution to own class
- */
 
 public class main implements Runnable{
-
 
     public static void main(String[] args){
         //get list of files
