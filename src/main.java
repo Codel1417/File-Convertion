@@ -60,7 +60,8 @@ public class main implements Runnable{
     }
     private static String generateExecCommand(File originalFile, File renamedFile){
         //create exec command
-        String execCommand ="\"" +  Singleton.HandbrakeDir + "\" --input \"" + renamedFile.getAbsolutePath() + "\" --output \"" + main.getOutputFile(originalFile) + "\" --format av_mp4 --inline-parameter-sets --markers --optimize --encoder nvenc_h265 --encoder-preset slow --vfr --all-subtitles --encoder-level auto --vb 3500 --ab 320 --arate auto --all-audio --aencoder copy:ac3,copy:dts --audio-fallback ac3 --mixdown stereo --maxHeight 1080 --maxWidth 1920 --keep-display-aspect";
+        String execCommand ="\"" +  Singleton.HandbrakeDir + "\" --input \"" + renamedFile.getAbsolutePath() + "\" --output \"" + main.getOutputFile(originalFile) + "\" --format av_mp4 --inline-parameter-sets --markers --optimize --encoder nvenc_h265 --encoder-preset slow --vfr --all-subtitles --encoder-level auto --vb 3500 --ab 320 --arate auto --all-audio --aencoder av_aac --mixdown stereo --maxHeight 1080 --maxWidth 1920 --keep-display-aspect";
+        System.out.println(execCommand);
         return execCommand;
     }
     static ArrayList<String> readFile(File file){
