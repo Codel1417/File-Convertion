@@ -60,7 +60,7 @@ public class main implements Runnable{
     }
     private static String generateExecCommand(File originalFile, File renamedFile){
         //create exec command
-        String execCommand ="\"" +  Singleton.HandbrakeDir + "\" --input \"" + renamedFile.getAbsolutePath() + "\" --output \"" + main.getOutputFile(originalFile) + "\" --format av_mp4 --inline-parameter-sets --markers --optimize --encoder nvenc_h265 --encoder-preset slow --vfr --all-subtitles --encoder-level auto --vb 3500 --ab 320 --arate auto --all-audio --aencoder av_aac --mixdown stereo --maxHeight 1080 --maxWidth 1920 --keep-display-aspect";
+        String execCommand ="\"" +  Singleton.HandbrakeDir + "\" --input \"" + renamedFile.getAbsolutePath() + "\" --output \"" + main.getOutputFile(originalFile) + "\" --format av_mkv --inline-parameter-sets --markers --encoder nvenc_h265 --vfr  --subtitle=1-99 --vb 3500 --arate auto --all-audio --aencoder av-aac  --maxHeight 1080 --maxWidth 1920 --keep-display-aspect";
         System.out.println(execCommand);
         return execCommand;
     }
@@ -81,11 +81,11 @@ public class main implements Runnable{
     }
 
     static String getOutputFile(File originalFile){
-        String outputFile = originalFile.getAbsolutePath().substring(0,originalFile.getAbsolutePath().length()-3) + "mp4";
+        String outputFile = originalFile.getAbsolutePath().substring(0,originalFile.getAbsolutePath().length()-3) + "mkv";
         outputFile = outputFile.replaceAll("2160","1080").replaceAll("BlueRay","").replaceAll("blueray","");
         return outputFile;
     }
-    static File renameCurrentFile(File originalFile) throws IOException {
+    static File renameCurrentFile(File originalFile) {
         String newPath = originalFile.getPath().replace(originalFile.getName(), "old_" + originalFile.getName());
         File newFile =  new File(newPath);
 
@@ -140,15 +140,29 @@ public class main implements Runnable{
                 pb.inheritIO(); //connects handbrake io to console window
                 System.out.println(pb.command());
                 Process p = pb.start();
-                if (p.waitFor() == 0){
-                    Singleton.getInstance().addToFileTXT(originalFile.getAbsolutePath().replace("\n"," "));
-                    System.out.println("Deleting File: " + newFile.getAbsolutePath());
-                    newFile.delete();
+                File output = new File(getOutputFile(originalFile));
+                int exitcode = p.waitFor();
+                if (exitcode == 0){
+                    long filesizeOriginal = newFile.length();
+                    long filesizeConverted = output.length();
+
+                    //1 bit to 1 mb = 800,000
+                    if (filesizeOriginal < filesizeConverted | filesizeConverted < 800000){
+                        //original file smaller than new file, or file smaller than 1mb
+                        newFile.renameTo(originalFile);
+                        Singleton.getInstance().addToFileTXT(originalFile.getAbsolutePath().replace("\n"," "));
+                        output.delete();
+                    }
+                    else{
+                        Singleton.getInstance().addToFileTXT(output.getAbsolutePath().replace("\n"," "));
+                        newFile.delete();
+                    }
                     Singleton.getInstance().writeFile(Singleton.getInstance().getFiletxt());
                 }
                 else{
                     //renames the file to the original name since conversion was unsuccessful
                     newFile.renameTo(originalFile);
+                    output.delete();
                 }
                 //Check if Run file removed, stop program if missing
                 File file1 = new File("RUN");
