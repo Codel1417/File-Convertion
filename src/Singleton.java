@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 
 public class Singleton {
@@ -36,6 +37,7 @@ public class Singleton {
     }
     public synchronized void writeFile(ArrayList<String> arrayList){
         System.out.println("Updating TXT File");
+        Collections.sort(arrayList);
         PrintWriter out = null;
         try {
             out = new PrintWriter(new File(convertedTxt));

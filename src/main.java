@@ -168,7 +168,7 @@ public class main implements Runnable{
                 File file1 = new File("RUN");
                 if (!file1.exists()){
                     System.out.println("Stopping");
-                    System.exit(1);
+                    System.exit(0);
                 }
             }
         } catch (IOException | InterruptedException e) {
