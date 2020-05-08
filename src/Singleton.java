@@ -9,60 +9,63 @@ public class Singleton {
     final static String HandbrakeDir = "HandBrakeCLI.exe";
     final static String convertedTxt = "converted.txt";
     private ArrayList<String> filetxt = new ArrayList<>();
-    private LinkedList<File> fileQueue = new LinkedList<>();
+    private final LinkedList<File> fileQueue = new LinkedList<>();
 
+    private static volatile Singleton _instance;
 
-        private static volatile Singleton _instance;
+    private Singleton() {
+    }
 
-    private Singleton() {}
-
-    public synchronized static Singleton getInstance(){
-            if(_instance == null){
-                synchronized(Singleton.class){
-                    if(_instance == null)
-                        _instance = new Singleton();
-                }
+    public synchronized static Singleton getInstance() {
+        if (_instance == null) {
+            synchronized (Singleton.class) {
+                if (_instance == null)
+                    _instance = new Singleton();
             }
-            return _instance;
         }
+        return _instance;
+    }
 
-    public synchronized File getFileFromQueue(){
-        File file = fileQueue.pop();
+    public synchronized File getFileFromQueue() {
+        final File file = fileQueue.pop();
         System.out.println("Getting item from Queue: " + file.getName());
         return file;
     }
 
-    public synchronized boolean isFileQueueEmpty(){
+    public synchronized boolean isFileQueueEmpty() {
         return fileQueue.isEmpty();
     }
-    public synchronized void writeFile(ArrayList<String> arrayList){
+
+    public synchronized void writeFile(final ArrayList<String> arrayList) {
         System.out.println("Updating TXT File");
         Collections.sort(arrayList);
         PrintWriter out = null;
         try {
             out = new PrintWriter(new File(convertedTxt));
-            for (String string : arrayList){
+            for (final String string : arrayList) {
                 out.println(string);
             }
             out.flush();
             out.close();
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    public synchronized void addToFileQueue(File file){
-            System.out.println("Adding to queue");
-            fileQueue.add(file);
+    public synchronized void addToFileQueue(final File file) {
+        System.out.println("Adding to queue");
+        fileQueue.add(file);
     }
-    public synchronized void addToFileTXT(String string){
-            filetxt.add(string);
+
+    public synchronized void addToFileTXT(final String string) {
+        filetxt.add(string);
     }
+
     public ArrayList<String> getFiletxt() {
         return filetxt;
     }
 
-    public void setFiletxt(ArrayList<String> filetxt) {
+    public void setFiletxt(final ArrayList<String> filetxt) {
         this.filetxt = filetxt;
     }
 }
