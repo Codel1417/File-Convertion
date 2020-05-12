@@ -23,10 +23,23 @@ public class main implements Runnable{
 
             for (Path path : filelist){
                 if(path.toFile().exists()){
-                    //skip unwanted files
-                    if (path.toFile().getAbsolutePath().endsWith(".db")){
-                        continue;
+                    //delete unusable media files
+                    String[] blockedFileTypes = {".iso",".xml",".metathumb"};
+                    for (String string :  blockedFileTypes){
+                        if(path.toFile().getAbsolutePath().endsWith(string)){
+                            System.out.print("Deleting File");
+                            path.toFile().delete();
+                            continue;
+                        }
                     }
+                    //skip unwanted files+
+                    String[] excludedFileTypes = {".db",".srt",".partial"};
+                    for(String string : excludedFileTypes){
+                        if (path.toFile().getAbsolutePath().endsWith(string)){
+                            continue;
+                        }
+                    }
+                    
                     System.out.println("Checking: " + path.toFile().getAbsolutePath());
                     //check against txt file to blacklist converted videos
                     boolean fileWasConverted = false;
@@ -83,6 +96,7 @@ public class main implements Runnable{
     static String getOutputFile(File originalFile){
         String outputFile = originalFile.getAbsolutePath().substring(0,originalFile.getAbsolutePath().length()-3) + "mkv";
         outputFile = outputFile.replaceAll("2160","1080").replaceAll("BlueRay","").replaceAll("blueray","");
+        outputFile = outputFile.replaceAll("old_", "").replaceAll("UHD", "").replaceAll("WEBDL", "").replaceAll("BR-DISK", "");
         return outputFile;
     }
     static File renameCurrentFile(File originalFile) {

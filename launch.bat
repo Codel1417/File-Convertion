@@ -1,4 +1,4 @@
 cd src
+DEL /S /Q *.class
 javac main.java
-java main
-pause
+start /low /b java main
