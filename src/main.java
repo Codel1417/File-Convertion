@@ -36,6 +36,7 @@ public class main implements Runnable{
                     String[] excludedFileTypes = {".db",".srt",".partial"};
                     for(String string : excludedFileTypes){
                         if (path.toFile().getAbsolutePath().endsWith(string)){
+                            System.out.println("Ignoring File");
                             continue;
                         }
                     }
