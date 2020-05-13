@@ -1,7 +1,12 @@
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -72,11 +77,11 @@ public class main implements Runnable{
         }
 
     }
-    private static String generateExecCommand(File originalFile, File renamedFile){
+    private static String[] generateExecCommand(File renamedFile){
         //create exec command
         String execCommand ="\"" +  Singleton.HandbrakeDir + "\" --input \"" + renamedFile.getAbsolutePath() + "\" --output \"" + main.getOutputFile(originalFile) + "\" --format av_mkv --inline-parameter-sets --markers --encoder nvenc_h265 --vfr  --subtitle=1-99 --vb 3500 --arate auto --all-audio --aencoder av-aac  --maxHeight 1080 --maxWidth 1920 --keep-display-aspect";
         System.out.println(execCommand);
-        return execCommand;
+        return execCommand.split(" ");
     }
     static ArrayList<String> readFile(File file){
         ArrayList<String> arrayList = new ArrayList<>();
@@ -150,19 +155,35 @@ public class main implements Runnable{
                     System.out.println("Skipping File");
                     continue;
                 }
+
                 ProcessBuilder pb = new ProcessBuilder();
-                pb.command(generateExecCommand(originalFile,newFile).split(" ")); // makes the execCommand compatible with processBuilder
+                pb.command(generateExecCommand(newFile)); // makes the execCommand compatible with processBuilder
                 pb.inheritIO(); //connects handbrake io to console window
                 System.out.println(pb.command());
                 Process p = pb.start();
+                
+                while (p.isAlive()){
+                    Reader inputStream =  new InputStreamReader(p.getInputStream());
+                    BufferedReader reader = new BufferedReader(inputStream);
+                    StringBuilder builder = new StringBuilder();
+                    String line = null;
+                    while ( (line = reader.readLine()) != null) {
+                        builder.append(line);
+                        builder.append(System.getProperty("line.separator"));
+                    }
+                }
+
+
                 File output = new File(getOutputFile(originalFile));
                 int exitcode = p.waitFor();
+                System.out.println("Exited with code: " + exitcode);
                 if (exitcode == 0){
                     long filesizeOriginal = newFile.length();
                     long filesizeConverted = output.length();
 
                     //1 bit to 1 mb = 800,000
                     if (filesizeOriginal < filesizeConverted | filesizeConverted < 800000){
+                        System.out.println("Keeping Old FIle");
                         //original file smaller than new file, or file smaller than 1mb
                         newFile.renameTo(originalFile);
                         Singleton.getInstance().addToFileTXT(originalFile.getAbsolutePath().replace("\n"," "));
@@ -175,6 +196,7 @@ public class main implements Runnable{
                     Singleton.getInstance().writeFile(Singleton.getInstance().getFiletxt());
                 }
                 else{
+                    System.out.println("Conversion Failed");
                     //renames the file to the original name since conversion was unsuccessful
                     newFile.renameTo(originalFile);
                     output.delete();
