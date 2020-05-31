@@ -44,6 +44,11 @@ public class main implements Runnable{
                             continue;
                         }
                     }
+                    if (path.toFile().getAbsolutePath().contains("inprogress_")){
+                        System.out.print("Deleting File");
+                        path.toFile().delete();
+                        skip = true;
+                    }
                     if (skip){
                         continue;
                     }
@@ -111,7 +116,7 @@ public class main implements Runnable{
     }
 
     static String getOutputFile( File originalFile) {
-        String outputFile = originalFile.getAbsolutePath().substring(0, originalFile.getAbsolutePath().length() - 3)
+        String outputFile = "inprogress_" + originalFile.getAbsolutePath().substring(0, originalFile.getAbsolutePath().length() - 3)
                 + "mkv";
         outputFile = outputFile.replaceAll("2160", "1080").replaceAll("BlueRay", "").replaceAll("blueray", "");
         outputFile = outputFile.replaceAll("old_", "").replaceAll("UHD", "").replaceAll("WEBDL", "")
@@ -191,7 +196,10 @@ public class main implements Runnable{
                         Singleton.getInstance().addToFileTXT(originalFile.getAbsolutePath().replace("\n", " "));
                         output.delete();
                     } else {
-                        Singleton.getInstance().addToFileTXT(output.getAbsolutePath().replace("\n", " "));
+                        //Conversion Sucessfull. new File size smaller
+                        File finalOutput = new File(output.getAbsolutePath().replaceAll("_inprogress",""));
+                        output.renameTo(finalOutput);
+                        Singleton.getInstance().addToFileTXT(finalOutput.getAbsolutePath().replace("\n", " "));
                         newFile.delete();
                     }
                     Singleton.getInstance().writeFile(Singleton.getInstance().getFiletxt());
