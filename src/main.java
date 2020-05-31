@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class main implements Runnable{
 
-    public static void main(final String[] args) {
+    public static void main( String[] args) {
         // get list of files
         List<Path> filelist;
         Singleton.getInstance().setFiletxt(readFile(new File(Singleton.convertedTxt)));
@@ -21,36 +21,43 @@ public class main implements Runnable{
         try {
             filelist = FileSearch();
 
-            for (final Path path : filelist) {
+            for ( Path path : filelist) {
                 if (path.toFile().exists()) {
+                    boolean skip = false;
                     System.out.println("Checking: " + path.toFile().getAbsolutePath());
                     // delete blocked file types
-                    final String[] blockedFileTypes = { ".iso", ".metathumb", ".partial" };
-                    for (final String string : blockedFileTypes) {
-                        if (path.toFile().getAbsolutePath().endsWith(string)) {
+                    String[] blockedFileTypes = { ".iso", ".metathumb", ".partial" };
+                    for ( String string1 : blockedFileTypes) {
+                        if (!skip && path.toFile().getAbsolutePath().endsWith(string1)) {
                             System.out.print("Deleting File");
                             path.toFile().delete();
+                            skip = true;
                             continue;
                         }
                     }
                     // skip unwanted files+
-                    final String[] excludedFileTypes = { ".db", ".srt", ".xml", ".png", ".jpg", ".nfo" };
-                    for (final String string : excludedFileTypes) {
-                        if (path.toFile().getAbsolutePath().endsWith(string)) {
+                    String[] excludedFileTypes = { ".db", ".srt", ".xml", ".png", ".jpg", ".nfo" };
+                    for (String string2 : excludedFileTypes) {
+                        if (!skip && path.toFile().getAbsolutePath().endsWith(string2)) {
                             System.out.println("Ignoring File");
+                            skip = true;
                             continue;
                         }
                     }
+                    if (skip){
+                        continue;
+                    }
                     // delete small media files
-                    if (path.toFile().length() < 4000000) {
+                    if (!skip && path.toFile().length() < 4000000) {
                         System.out.println("Deleting File");
                         path.toFile().delete();
+                        skip = true;
                         continue;
                     }
                     // check against txt file to blacklist converted videos
                     boolean fileWasConverted = false;
-                    for (final String file : Singleton.getInstance().getFiletxt()) {
-                        final String filePath = path.toFile().getAbsolutePath().trim();
+                    for ( String file : Singleton.getInstance().getFiletxt()) {
+                        String filePath = path.toFile().getAbsolutePath().trim();
                         if (file.trim().contains(filePath)) {
                             fileWasConverted = true;
                         }
@@ -61,49 +68,49 @@ public class main implements Runnable{
                     }
                 }
             }
-            final Runnable myRunnable = new main();
-            final Runnable myRunnable2 = new main();
+            Runnable myRunnable = new main();
+            Runnable myRunnable2 = new main();
 
-            final Thread threadOne = new Thread(myRunnable);
-            final Thread threadTwo = new Thread(myRunnable2);
+            Thread threadOne = new Thread(myRunnable);
+            Thread threadTwo = new Thread(myRunnable2);
 
             threadOne.setName("ThreadOne");
             threadTwo.setName("ThreadTwo");
 
             threadOne.start();
             threadTwo.start();
-        } catch (final IOException e) {
+        } catch ( IOException e) {
             e.printStackTrace();
         }
 
     }
 
-    private static String[] generateExecCommand(final File originalFile, final File renamedFile) {
+    private static String[] generateExecCommand( File originalFile,  File renamedFile) {
         // create exec command
-        final String execCommand = "\"" + Singleton.HandbrakeDir + "\" --input \"" + renamedFile.getAbsolutePath()
+        String execCommand = "\"" + Singleton.HandbrakeDir + "\" --input \"" + renamedFile.getAbsolutePath()
                 + "\" --output \"" + main.getOutputFile(originalFile)
                 + "\" --format av_mkv --inline-parameter-sets --markers --encoder nvenc_h265 --vfr  --subtitle=1-99 --vb 3500 --arate auto --all-audio --aencoder av-aac  --maxHeight 1080 --maxWidth 1920 --keep-display-aspect";
         System.out.println(execCommand);
         return execCommand.split(" ");
     }
 
-    static ArrayList<String> readFile(final File file) {
-        final ArrayList<String> arrayList = new ArrayList<>();
+    static ArrayList<String> readFile( File file) {
+        ArrayList<String> arrayList = new ArrayList<>();
         if (file.exists()) {
             try {
-                final Scanner scanner = new Scanner(file);
+                Scanner scanner = new Scanner(file);
                 while (scanner.hasNext()) {
                     arrayList.add(scanner.nextLine());
                 }
                 scanner.close();
-            } catch (final FileNotFoundException e) {
+            } catch ( FileNotFoundException e) {
                 e.printStackTrace();
             }
         }
         return arrayList;
     }
 
-    static String getOutputFile(final File originalFile) {
+    static String getOutputFile( File originalFile) {
         String outputFile = originalFile.getAbsolutePath().substring(0, originalFile.getAbsolutePath().length() - 3)
                 + "mkv";
         outputFile = outputFile.replaceAll("2160", "1080").replaceAll("BlueRay", "").replaceAll("blueray", "");
@@ -112,9 +119,9 @@ public class main implements Runnable{
         return outputFile;
     }
 
-    static File renameCurrentFile(final File originalFile) {
-        final String newPath = originalFile.getPath().replace(originalFile.getName(), "old_" + originalFile.getName());
-        final File newFile = new File(newPath);
+    static File renameCurrentFile( File originalFile) {
+        String newPath = originalFile.getPath().replace(originalFile.getName(), "old_" + originalFile.getName());
+        File newFile = new File(newPath);
 
         if (originalFile.renameTo(newFile)) {
             System.out.println("File renamed successfully to : " + newPath);
@@ -142,7 +149,7 @@ public class main implements Runnable{
             out = new PrintWriter(new File("RUN"));
             out.flush();
             out.close();
-        } catch (final FileNotFoundException e) {
+        } catch ( FileNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -152,29 +159,29 @@ public class main implements Runnable{
         System.out.println("Starting Thread");
         try {
             while (!Singleton.getInstance().isFileQueueEmpty()) {
-                final File originalFile = Singleton.getInstance().getFileFromQueue();
+                File originalFile = Singleton.getInstance().getFileFromQueue();
 
                 // This is to prevent the output video from overwriting the original if the file
                 // extension is the same.
-                final File newFile = renameCurrentFile(originalFile);
+                File newFile = renameCurrentFile(originalFile);
                 if (newFile == null) {
                     System.out.println("Skipping File");
                     continue;
                 }
 
-                final ProcessBuilder pb = new ProcessBuilder();
+                ProcessBuilder pb = new ProcessBuilder();
                 pb.command(generateExecCommand(originalFile, newFile)); // makes the execCommand compatible with
                                                                         // processBuilder
                 pb.inheritIO(); // connects handbrake io to console window
                 System.out.println(pb.command());
-                final Process p = pb.start();
+                Process p = pb.start();
 
-                final File output = new File(getOutputFile(originalFile));
-                final int exitcode = p.waitFor();
+                File output = new File(getOutputFile(originalFile));
+                int exitcode = p.waitFor();
                 System.out.println("Exited with code: " + exitcode);
                 if (exitcode == 0) {
-                    final long filesizeOriginal = newFile.length();
-                    final long filesizeConverted = output.length();
+                    long filesizeOriginal = newFile.length();
+                    long filesizeConverted = output.length();
 
                     // 1 bit to 1 mb = 800,000
                     if (filesizeOriginal < filesizeConverted | filesizeConverted < 4000000) {
@@ -195,7 +202,7 @@ public class main implements Runnable{
                     output.delete();
                 }
                 // Check if Run file removed, stop program if missing
-                final File file1 = new File("RUN");
+                File file1 = new File("RUN");
                 if (!file1.exists()){
                     System.out.println("Stopping");
                     System.exit(0);
