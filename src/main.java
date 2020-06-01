@@ -44,6 +44,7 @@ public class main implements Runnable{
                             continue;
                         }
                     }
+                    //Delete unwanted in progress files
                     if (path.toFile().getAbsolutePath().contains("inprogress_")){
                         System.out.print("Deleting File");
                         path.toFile().delete();
@@ -87,7 +88,6 @@ public class main implements Runnable{
         } catch ( IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private static String[] generateExecCommand( File originalFile,  File renamedFile) {
@@ -141,8 +141,8 @@ public class main implements Runnable{
         // walk the file tree finding all video files
         System.out.println("Looking for files.....");
         List<Path> filelist;
-        filelist = Files.walk(Paths.get("Y:\\Movies")).filter(Files::isRegularFile).collect(Collectors.toList());
-        filelist.addAll(Files.walk(Paths.get("Y:\\Shows")).filter(Files::isRegularFile).collect(Collectors.toList()));
+        filelist = Files.walk(Paths.get("D:\\Media\\Movies")).filter(Files::isRegularFile).collect(Collectors.toList());
+        filelist.addAll(Files.walk(Paths.get("D:\\Media\\Shows")).filter(Files::isRegularFile).collect(Collectors.toList()));
         System.out.println("Search Completed");
         return filelist;
     }
