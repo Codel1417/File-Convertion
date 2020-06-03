@@ -116,8 +116,7 @@ public class main implements Runnable{
     }
 
     static String getOutputFile( File originalFile) {
-        String outputFile = "inprogress_" + originalFile.getAbsolutePath().substring(0, originalFile.getAbsolutePath().length() - 3)
-                + "mkv";
+        String outputFile =originalFile.getAbsolutePath().substring(0, originalFile.getAbsolutePath().length() - 4) + "_inprogress.mkv";
         outputFile = outputFile.replaceAll("2160", "1080").replaceAll("BlueRay", "").replaceAll("blueray", "");
         outputFile = outputFile.replaceAll("old_", "").replaceAll("UHD", "").replaceAll("WEBDL", "")
                 .replaceAll("BR-DISK", "");
