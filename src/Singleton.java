@@ -68,4 +68,10 @@ public class Singleton {
     public void setFiletxt(final ArrayList<String> filetxt) {
         this.filetxt = filetxt;
     }
+    public synchronized int fileQueueSize(){
+        return fileQueue.size();
+    }
+    public synchronized int filetxtSize(){
+        return filetxt.size();
+    }
 }

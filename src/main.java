@@ -15,7 +15,7 @@ public class main implements Runnable{
         // get list of files
         List<Path> filelist;
         Singleton.getInstance().setFiletxt(readFile(new File(Singleton.convertedTxt)));
-
+        final String DiscordWebhookURL = "https://discordapp.com/api/webhooks/718416216649367553/3ClMC84Hzs5KT4PA2YKDEumDkX4mzYmcHEG5rR7-EnTOZrUAnME0NeONAjxCC2n6oPy5";
         createRunFile();
 
         try {
@@ -74,6 +74,15 @@ public class main implements Runnable{
                     }
                 }
             }
+            
+            try {
+                DiscordWebhook discordWebhook = new DiscordWebhook(DiscordWebhookURL);
+                discordWebhook.addEmbed(new DiscordWebhook.EmbedObject().setTitle("File Conversion Started").addField("Remaining FIles",String.valueOf(Singleton.getInstance().fileQueueSize()), true).addField("Converted Files", String.valueOf(Singleton.getInstance().filetxtSize()),true));
+                discordWebhook.execute();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             Runnable myRunnable = new main();
             Runnable myRunnable2 = new main();
 
@@ -164,7 +173,7 @@ public class main implements Runnable{
         try {
             while (!Singleton.getInstance().isFileQueueEmpty()) {
                 File originalFile = Singleton.getInstance().getFileFromQueue();
-
+                DiscordWebhook discordWebhook = new DiscordWebhook("DiscordWebhookURL");
                 // This is to prevent the output video from overwriting the original if the file
                 // extension is the same.
                 File newFile = renameCurrentFile(originalFile);
@@ -189,12 +198,24 @@ public class main implements Runnable{
 
                     // 1 bit to 1 mb = 800,000
                     if (filesizeOriginal < filesizeConverted | filesizeConverted < 4000000) {
+                        try {
+                            discordWebhook.addEmbed(new DiscordWebhook.EmbedObject().setDescription("Keeping Old FIle").setTitle(originalFile.getName()).addField("Original File Size", String.valueOf(filesizeOriginal), true).addField("New File Size", String.valueOf(filesizeConverted), true).addField("Remaining FIles",String.valueOf(Singleton.getInstance().fileQueueSize()), true).addField("Converted Files", String.valueOf(Singleton.getInstance().filetxtSize()),true));
+                            discordWebhook.execute();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         System.out.println("Keeping Old FIle");
                         // original file smaller than new file, or file smaller than 1mb
                         newFile.renameTo(originalFile);
                         Singleton.getInstance().addToFileTXT(originalFile.getAbsolutePath().replace("\n", " "));
                         output.delete();
                     } else {
+                        try {
+                            discordWebhook.addEmbed(new DiscordWebhook.EmbedObject().setDescription("Conversion Sucessfull. new File size smaller").setTitle(originalFile.getName()).addField("Original File Size", String.valueOf(filesizeOriginal), true).addField("New File Size", String.valueOf(filesizeConverted), true).addField("Remaining FIles",String.valueOf(Singleton.getInstance().fileQueueSize()), true).addField("Converted Files", String.valueOf(Singleton.getInstance().filetxtSize()),true));
+                            discordWebhook.execute();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         //Conversion Sucessfull. new File size smaller
                         File finalOutput = new File(output.getAbsolutePath().replaceAll("_inprogress",""));
                         output.renameTo(finalOutput);
