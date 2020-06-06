@@ -5,17 +5,17 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 
 public class main implements Runnable{
-
+    final static String DiscordWebhookURL = "https://discordapp.com/api/webhooks/718416216649367553/3ClMC84Hzs5KT4PA2YKDEumDkX4mzYmcHEG5rR7-EnTOZrUAnME0NeONAjxCC2n6oPy5";
     public static void main( String[] args) {
         // get list of files
         List<Path> filelist;
         Singleton.getInstance().setFiletxt(readFile(new File(Singleton.convertedTxt)));
-        final String DiscordWebhookURL = "https://discordapp.com/api/webhooks/718416216649367553/3ClMC84Hzs5KT4PA2YKDEumDkX4mzYmcHEG5rR7-EnTOZrUAnME0NeONAjxCC2n6oPy5";
         createRunFile();
 
         try {
@@ -173,7 +173,7 @@ public class main implements Runnable{
         try {
             while (!Singleton.getInstance().isFileQueueEmpty()) {
                 File originalFile = Singleton.getInstance().getFileFromQueue();
-                DiscordWebhook discordWebhook = new DiscordWebhook("DiscordWebhookURL");
+                DiscordWebhook discordWebhook = new DiscordWebhook(DiscordWebhookURL);
                 // This is to prevent the output video from overwriting the original if the file
                 // extension is the same.
                 File newFile = renameCurrentFile(originalFile);
@@ -195,11 +195,21 @@ public class main implements Runnable{
                 if (exitcode == 0) {
                     long filesizeOriginal = newFile.length();
                     long filesizeConverted = output.length();
+                    DecimalFormat df = new DecimalFormat();
+                    df.setMaximumFractionDigits(2);
+                    float compressionRatio = (1 - (float)filesizeConverted/(float)filesizeOriginal) * 100;
 
                     // 1 bit to 1 mb = 800,000
                     if (filesizeOriginal < filesizeConverted | filesizeConverted < 4000000) {
                         try {
-                            discordWebhook.addEmbed(new DiscordWebhook.EmbedObject().setDescription("Keeping Old FIle").setTitle(originalFile.getName()).addField("Original File Size", String.valueOf(filesizeOriginal), true).addField("New File Size", String.valueOf(filesizeConverted), true).addField("Remaining FIles",String.valueOf(Singleton.getInstance().fileQueueSize()), true).addField("Converted Files", String.valueOf(Singleton.getInstance().filetxtSize()),true));
+                            discordWebhook.addEmbed(new DiscordWebhook.EmbedObject()
+                                .setDescription("Keeping Old FIle")
+                                .setTitle(originalFile.getName())
+                                .addField("Original File Size", String.valueOf(filesizeOriginal), true)
+                                .addField("New File Size", String.valueOf(filesizeConverted), true)
+                                .addField("Remaining FIles",String.valueOf(Singleton.getInstance().fileQueueSize()), true)
+                                .addField("Converted Files", String.valueOf(Singleton.getInstance().filetxtSize()),true));
+
                             discordWebhook.execute();
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -211,7 +221,14 @@ public class main implements Runnable{
                         output.delete();
                     } else {
                         try {
-                            discordWebhook.addEmbed(new DiscordWebhook.EmbedObject().setDescription("Conversion Sucessfull. new File size smaller").setTitle(originalFile.getName()).addField("Original File Size", String.valueOf(filesizeOriginal), true).addField("New File Size", String.valueOf(filesizeConverted), true).addField("Remaining FIles",String.valueOf(Singleton.getInstance().fileQueueSize()), true).addField("Converted Files", String.valueOf(Singleton.getInstance().filetxtSize()),true));
+                            discordWebhook.addEmbed(new DiscordWebhook.EmbedObject()
+                                .setDescription("Conversion Sucessfull. new File size smaller")
+                                .setTitle(originalFile.getName())
+                                .addField("Original File Size", String.valueOf(filesizeOriginal), true)
+                                .addField("New File Size", String.valueOf(filesizeConverted), true)
+                                .addField("Remaining FIles",String.valueOf(Singleton.getInstance().fileQueueSize()), true)
+                                .addField("Converted Files", String.valueOf(Singleton.getInstance().filetxtSize()),true)
+                                .addField("Compression %", String.valueOf(df.format(compressionRatio))+ "%", true));
                             discordWebhook.execute();
                         } catch (Exception e) {
                             e.printStackTrace();
